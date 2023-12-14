@@ -3,6 +3,7 @@
 :source-highlighter: prettify
 :project_id: gs-batch-processing
 
+Erik was here!
 This guide walks you through the process of creating a basic batch-driven solution.
 
 == What You Will build
