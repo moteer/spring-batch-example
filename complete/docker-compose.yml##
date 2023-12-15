@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # MySQL-Datenbank-Service
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: batch
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: ["bash", "-c", "chmod 644 /docker-entrypoint-initdb.d/init.sql && docker-entrypoint.sh mysqld"]
+
+
+  # Spring Boot-Anwendung
+  myapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/batch
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+    ports:
+      - "8083:8080"
+    depends_on:
+      - db

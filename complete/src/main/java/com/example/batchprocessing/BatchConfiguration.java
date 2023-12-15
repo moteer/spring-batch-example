@@ -1,69 +1,87 @@
 package com.example.batchprocessing;
 
-import javax.sql.DataSource;
-
+import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import javax.sql.DataSource;
+import java.time.LocalDate;
+import java.util.Collections;
 
 @Configuration
 public class BatchConfiguration {
 
-	// tag::readerwriterprocessor[]
-	@Bean
-	public FlatFileItemReader<Person> reader() {
-		return new FlatFileItemReaderBuilder<Person>()
-			.name("personItemReader")
-			.resource(new ClassPathResource("sample-data.csv"))
-			.delimited()
-			.names("firstName", "lastName")
-			.targetType(Person.class)
-			.build();
-	}
+    @Autowired
+    private DataSource dataSource;
 
-	@Bean
-	public PersonItemProcessor processor() {
-		return new PersonItemProcessor();
-	}
 
-	@Bean
-	public JdbcBatchItemWriter<Person> writer(DataSource dataSource) {
-		return new JdbcBatchItemWriterBuilder<Person>()
-			.sql("INSERT INTO people (first_name, last_name) VALUES (:firstName, :lastName)")
-			.dataSource(dataSource)
-			.beanMapped()
-			.build();
-	}
-	// end::readerwriterprocessor[]
+    @Bean
+    public ItemReader<Transaction> reader() {
+        return new FlatFileItemReaderBuilder<Transaction>()
+                .name("TransactionFileReader")
+                .linesToSkip(1)
+                .resource(new ClassPathResource("transactions.csv"))
+                .delimited()
+                .names("quellbank", "quellkontonummer", "zielbank", "zielkontonummer", "transaktionsdatum", "betrag")
+                .targetType(Transaction.class)
+                .customEditors(Collections.singletonMap(LocalDate.class, new CustomLocalDateEditor("yyyy-MM-dd")))
+                .build();
+    }
 
-	// tag::jobstep[]
-	@Bean
-	public Job importUserJob(JobRepository jobRepository,Step step1, JobCompletionNotificationListener listener) {
-		return new JobBuilder("importUserJob", jobRepository)
-			.listener(listener)
-			.start(step1)
-			.build();
-	}
+    @Bean
+    public ItemProcessor<Transaction, Account> processor() {
+        return new TransactionItemProcessor();
+    }
 
-	@Bean
-	public Step step1(JobRepository jobRepository, DataSourceTransactionManager transactionManager,
-					  FlatFileItemReader<Person> reader, PersonItemProcessor processor, JdbcBatchItemWriter<Person> writer) {
-		return new StepBuilder("step1", jobRepository)
-			.<Person, Person> chunk(3, transactionManager)
-			.reader(reader)
-			.processor(processor)
-			.writer(writer)
-			.build();
-	}
-	// end::jobstep[]
+    @Autowired
+    public EntityManagerFactory entityManagerFactory;
+
+    @Bean
+    public ItemWriter<Account> writer(EntityManagerFactory entityManagerFactory) {
+        return new JpaItemWriterBuilder<Account>()
+                .entityManagerFactory(entityManagerFactory)
+                .build();
+    }
+
+    @Bean
+    public Step processTransactionsStep(ItemReader<Transaction> reader,
+                                        ItemProcessor<Transaction, Account> processor,
+                                        ItemWriter<Account> writer,
+                                        JobRepository jobRepository,
+                                        PlatformTransactionManager transactionManager) {
+
+        return new StepBuilder("processTransactionsStep6", jobRepository)
+                .<Transaction, Account>chunk(10, transactionManager)
+                .reader(reader)
+                .processor(processor)
+                .writer(writer)
+                .build();
+    }
+
+    @Bean
+    public Job processTransactionJob(JobRepository jobRepository,
+                                     Step processTransactionsStep,
+                                     JobCompletionNotificationListener listener) {
+        return new JobBuilder("processTransactionJob", jobRepository)
+                .listener(listener)
+                .start(processTransactionsStep)
+                .build();
+    }
 }
