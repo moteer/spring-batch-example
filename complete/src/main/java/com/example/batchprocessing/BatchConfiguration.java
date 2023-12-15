@@ -1,6 +1,7 @@
 package com.example.batchprocessing;
 
 import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -48,15 +50,14 @@ public class BatchConfiguration {
         return new TransactionItemProcessor();
     }
 
+    @Autowired
+    public EntityManagerFactory entityManagerFactory;
+
     @Bean
-    public ItemWriter<Account> writer() {
+    public ItemWriter<Account> writer(EntityManagerFactory entityManagerFactory) {
         return new JpaItemWriterBuilder<Account>()
+                .entityManagerFactory(entityManagerFactory)
                 .build();
-        //JdbcBatchItemWriter<Account> writer = new JdbcBatchItemWriter<>();
-        //writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
-        //writer.setSql("UPDATE Account SET Saldo = :saldo WHERE Bank = :bank AND konto_nummer = :kontoNummer");
-        //writer.setDataSource(dataSource);
-        //return writer;
     }
 
     @Bean
@@ -66,7 +67,7 @@ public class BatchConfiguration {
                                         JobRepository jobRepository,
                                         PlatformTransactionManager transactionManager) {
 
-        return new StepBuilder("processTransactionsStep2", jobRepository)
+        return new StepBuilder("processTransactionsStep6", jobRepository)
                 .<Transaction, Account>chunk(10, transactionManager)
                 .reader(reader)
                 .processor(processor)

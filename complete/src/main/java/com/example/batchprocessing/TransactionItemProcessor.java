@@ -9,7 +9,7 @@ import java.util.List;
 public class TransactionItemProcessor implements ItemProcessor<Transaction, Account> {
 
     @Autowired
-    public AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     @Override
     public Account process(Transaction transaction) throws Exception {
@@ -25,7 +25,7 @@ public class TransactionItemProcessor implements ItemProcessor<Transaction, Acco
         System.out.printf("Transaction: Account %s(%s) von Saldo alt: %s auf Saldo neu:%s",
                 account.getBank(), account.getKontoNummer(), currentSaldo, account.getSaldo());
 
-        accountRepository.save(account);
+        //accountRepository.save(account);
 
         return account;
     }
