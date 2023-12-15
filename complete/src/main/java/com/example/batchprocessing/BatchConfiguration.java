@@ -53,7 +53,7 @@ public class BatchConfiguration {
     public ItemWriter<Account> writer() {
         JdbcBatchItemWriter<Account> writer = new JdbcBatchItemWriter<>();
         writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
-        writer.setSql("UPDATE Account SET Saldo = :saldo WHERE Bank = :bank AND Kontonummer = :kontonummer");
+        writer.setSql("UPDATE Account SET Saldo = :saldo WHERE Bank = :bank AND konto_nummer = :kontoNummer");
         writer.setDataSource(dataSource);
         return writer;
     }
@@ -65,7 +65,7 @@ public class BatchConfiguration {
                                         JobRepository jobRepository,
                                         PlatformTransactionManager transactionManager) {
 
-        return new StepBuilder("processTransactionsStep", jobRepository)
+        return new StepBuilder("processTransactionsStep2", jobRepository)
                 .<Transaction, Account>chunk(10, transactionManager)
                 .reader(reader)
                 .processor(processor)

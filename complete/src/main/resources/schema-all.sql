@@ -1,7 +1,7 @@
 DROP TABLE Account IF EXISTS;
 
 CREATE TABLE Account (
-    AccountID   INT PRIMARY KEY AUTO_INCREMENT,
+    id   INT PRIMARY KEY AUTO_INCREMENT,
     Bank        VARCHAR(255),
     Kontonummer VARCHAR(20),
     Saldo       DECIMAL(10, 2)

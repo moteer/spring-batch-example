@@ -26,7 +26,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
             log.info("!!! JOB FINISHED! Time to verify the results");
 
             jdbcTemplate
-                    .query("SELECT AccountID, Bank, Kontonummer, Saldo FROM Account", new DataClassRowMapper<>(Account.class))
+                    .query("SELECT id, Bank, konto_nummer, Saldo FROM Account", new DataClassRowMapper<>(Account.class))
                     .forEach(account -> log.info("Found <{{}}> in the database.", account));
         }
     }
