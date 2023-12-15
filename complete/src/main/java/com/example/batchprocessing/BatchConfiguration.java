@@ -1,5 +1,6 @@
 package com.example.batchprocessing;
 
+import jakarta.persistence.EntityManagerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -10,10 +11,8 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
-import org.springframework.batch.item.file.mapping.DefaultLineMapper;
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,11 +50,13 @@ public class BatchConfiguration {
 
     @Bean
     public ItemWriter<Account> writer() {
-        JdbcBatchItemWriter<Account> writer = new JdbcBatchItemWriter<>();
-        writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
-        writer.setSql("UPDATE Account SET Saldo = :saldo WHERE Bank = :bank AND konto_nummer = :kontoNummer");
-        writer.setDataSource(dataSource);
-        return writer;
+        return new JpaItemWriterBuilder<Account>()
+                .build();
+        //JdbcBatchItemWriter<Account> writer = new JdbcBatchItemWriter<>();
+        //writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
+        //writer.setSql("UPDATE Account SET Saldo = :saldo WHERE Bank = :bank AND konto_nummer = :kontoNummer");
+        //writer.setDataSource(dataSource);
+        //return writer;
     }
 
     @Bean
