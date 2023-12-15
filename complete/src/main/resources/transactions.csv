@@ -1,0 +1,6 @@
+Quellbank,Quellkontonummer,Zielbank,Zielkontonummer,Transaktionsdatum,Betrag
+Sparkasse,1234567890,Commerzbank,9876543210,2023-12-01,100.00
+Commerzbank,9876543210,Deutsche Bank,5432109876,2023-12-02,-20.00
+Deutsche Bank,5432109876,Volksbank,1357924680,2023-12-03,50.00
+Volksbank,1357924680,Postbank,2468013579,2023-12-04,-10.00
+Postbank,2468013579,Sparkasse,1234567890,2023-12-05,30.00
